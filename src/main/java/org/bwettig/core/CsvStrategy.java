@@ -30,7 +30,7 @@ abstract public class CsvStrategy implements Strategy {
 
       try {
         if (csvfile.length() == 0) {
-          throw Exception;
+          throw new RuntimeException("File is empty: " + csvfile.getName());
         }
         String line = "";
         boolean isHeaderRow = true;
@@ -47,9 +47,10 @@ abstract public class CsvStrategy implements Strategy {
         br.close();
         fm.moveToSuccess(csvfile);
 
-      } catch(Exception e) {
+      } catch(RuntimeException e) {
         br.close();
         fm.moveToError(csvfile);
+        System.err.print(e.getMessage());
         break;
       }
     }
@@ -60,13 +61,12 @@ abstract public class CsvStrategy implements Strategy {
     return line.split(splitRegex, -1);
   }
 
-  private boolean validateHeaders(String[] tokens) {
+  private void validateHeaders(String[] tokens) {
     for (String h : headers) {
       int headerIndex = Arrays.asList(tokens).indexOf(h);
-      if (headerIndex < 0) return false;
+      if (headerIndex < 0) return;
       headerIndexing.add(headerIndex);
     }
-    return true;
   }
 
   private List<String> validateRowData(String[] tokens) {
