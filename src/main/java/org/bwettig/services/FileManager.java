@@ -42,7 +42,7 @@ public class FileManager {
   private void validateDirStructure() {
     for (Path p : Arrays.asList(STAGING, ERROR, SUCCESS, COMPILED)) {
       File f = new File(p.toString());
-      if (!(Files.exists(p) && f.canWrite())) return;
+      if (!(Files.exists(p) && f.canWrite())) throw new RuntimeException("Directory structure has been corrupted, ensure that there is a \"resources\" directory in the root with subdirectories \"compiled\", \"error\", \"staging\", and \"processed\"");
     }
   }
 

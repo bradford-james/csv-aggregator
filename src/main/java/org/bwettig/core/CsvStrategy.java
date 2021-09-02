@@ -1,11 +1,10 @@
 package org.bwettig.core;
 
 import org.bwettig.model.Column;
+import org.bwettig.model.Strategy;
 import org.bwettig.services.FileManager;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -16,6 +15,7 @@ abstract public class CsvStrategy implements Strategy {
   private Column[] schema;
   protected List<String> headers;
   protected final FileManager fm;
+  protected File currentFile;
 
   public CsvStrategy(FileManager fm) {
     this.fm = fm;
@@ -24,31 +24,35 @@ abstract public class CsvStrategy implements Strategy {
   public void process(File[] files) throws IOException {
     setHeader();
     for (File csvfile : files) {
+      currentFile = csvfile;
+      boolean isHeaderRow = true;
       BufferedReader br = new BufferedReader(new FileReader(csvfile));
+      int rowCounter = 1;
 
       try {
         if (csvfile.length() == 0) {
-          throw new RuntimeException("File is empty: " + csvfile.getName());
+          throw new RuntimeException("File is empty");
         }
         String line = "";
-        boolean isHeaderRow = true;
         while ((line = br.readLine()) != null) {
           String[] tokens = parseCsvLine(line);
           if (isHeaderRow) {
             validateHeaders(tokens);
             isHeaderRow = false;
           } else {
-            List<String> rowData = validateRowData(tokens);
-            setRowData(rowData);
+            List<String> rowData = validateRowData(tokens, rowCounter);
+            if (rowData.size() > 0) setRowData(rowData);
           }
+          rowCounter++;
         }
         br.close();
         fm.moveToSuccess(csvfile);
 
-      } catch(RuntimeException e) {
+      } catch (RuntimeException e) {
         br.close();
         fm.moveToError(csvfile);
-        System.err.print(e.getMessage());
+        System.err.print(csvfile + ": " + e.getMessage() + "\n");
+        e.printStackTrace();
         break;
       }
     }
@@ -65,7 +69,7 @@ abstract public class CsvStrategy implements Strategy {
   }
   abstract protected void validateHeaders(String[] tokens);
 
-  abstract protected List<String> validateRowData(String[] tokens);
+  abstract protected List<String> validateRowData(String[] tokens, int rowCounter);
 
   abstract protected void setHeader() throws IOException;
 

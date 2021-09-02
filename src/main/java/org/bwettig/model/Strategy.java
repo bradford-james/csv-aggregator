@@ -1,4 +1,4 @@
-package org.bwettig.core;
+package org.bwettig.model;
 
 import java.io.File;
 import java.io.FileWriter;
