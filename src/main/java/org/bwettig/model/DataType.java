@@ -1,4 +1,4 @@
-package org.bwettig;
+package org.bwettig.model;
 
 /**
  * @author bradwettig
