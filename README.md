@@ -7,6 +7,7 @@ Prerequisites:
 
 Build: `mvn clean install`  
 Execute: `java -cp target/csv-aggregator-1.0.jar org.bwettig.App`
+Test: `mvn clean test`
 ## Background
 The purpose of this application is to conflate multiple csv files into a single csv file, according to a defined schema.  Some validation and translation is required where necessary to capture full transactions, otherwise missing or invalid data is reported to the terminal.
 
