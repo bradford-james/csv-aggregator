@@ -7,7 +7,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author bradwettig
@@ -18,6 +17,8 @@ abstract public class CsvStrategy implements Strategy {
   protected List<String> headers;
   protected final FileManager fm;
 
+  private final List<Integer> headerIndexing = new ArrayList<>();
+
   public CsvStrategy(FileManager fm) {
     this.fm = fm;
   }
@@ -25,46 +26,60 @@ abstract public class CsvStrategy implements Strategy {
   public void process(File[] files) throws IOException {
     setHeader();
     for (File csvfile : files) {
-      boolean errorFlag = false;
-      if (csvfile.length() == 0) {
+      BufferedReader br = new BufferedReader(new FileReader(csvfile));
+
+      try {
+        if (csvfile.length() == 0) {
+          throw Exception;
+        }
+        String line = "";
+        boolean isHeaderRow = true;
+        while ((line = br.readLine()) != null) {
+          String[] tokens = parseCsvLine(line);
+          if (isHeaderRow) {
+            validateHeaders(tokens);
+            isHeaderRow = false;
+          } else {
+            List<String> rowData = validateRowData(tokens);
+            setRowData(rowData);
+          }
+        }
+        br.close();
+        fm.moveToSuccess(csvfile);
+
+      } catch(Exception e) {
+        br.close();
         fm.moveToError(csvfile);
         break;
       }
-
-      String line = "";
-      boolean isHeaderLine = true;
-      List<Integer> headerIndexing = new ArrayList<>();
-
-      BufferedReader br = new BufferedReader(new FileReader(csvfile));
-      while ((line = br.readLine()) != null) {
-        String[] tokens = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
-        if (isHeaderLine) {
-          for (String h : headers) {
-            int headerIndex = Arrays.asList(tokens).indexOf(h);
-            if (headerIndex < 0) errorFlag = true;
-            headerIndexing.add(headerIndex);
-          }
-          isHeaderLine = false;
-        } else {
-          List<String> rowData = new ArrayList<>();
-          for (int i : headerIndexing) {
-            rowData.add(tokens[i]);
-          }
-          fm.writeToOutput("\n");
-          fm.writeToOutput(String.join(",", rowData));
-        }
-        if (errorFlag) {
-          br.close();
-          fm.moveToError(csvfile);
-          break;
-        }
-      }
-
-      if (!errorFlag) {
-        br.close();
-        fm.moveToSuccess(csvfile);
-      }
     }
+  }
+
+  private String[] parseCsvLine(String line) {
+    String splitRegex = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
+    return line.split(splitRegex, -1);
+  }
+
+  private boolean validateHeaders(String[] tokens) {
+    for (String h : headers) {
+      int headerIndex = Arrays.asList(tokens).indexOf(h);
+      if (headerIndex < 0) return false;
+      headerIndexing.add(headerIndex);
+    }
+    return true;
+  }
+
+  private List<String> validateRowData(String[] tokens) {
+    List<String> rowData = new ArrayList<>();
+    for (int i : headerIndexing) {
+      rowData.add(tokens[i]);
+    }
+    return rowData;
+  }
+
+  public void setRowData(List<String> rowData) throws IOException {
+    fm.writeToOutput("\n");
+    fm.writeToOutput(String.join(",", rowData));
   }
 
   abstract public void setHeader() throws IOException;
