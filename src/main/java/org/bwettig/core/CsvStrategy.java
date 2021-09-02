@@ -17,8 +17,6 @@ abstract public class CsvStrategy implements Strategy {
   protected List<String> headers;
   protected final FileManager fm;
 
-  private final List<Integer> headerIndexing = new ArrayList<>();
-
   public CsvStrategy(FileManager fm) {
     this.fm = fm;
   }
@@ -61,31 +59,17 @@ abstract public class CsvStrategy implements Strategy {
     return line.split(splitRegex, -1);
   }
 
-  private void validateHeaders(String[] tokens) {
-    for (String h : headers) {
-      int headerIndex = Arrays.asList(tokens).indexOf(h);
-      if (headerIndex < 0) return;
-      headerIndexing.add(headerIndex);
-    }
-  }
-
-  private List<String> validateRowData(String[] tokens) {
-    List<String> rowData = new ArrayList<>();
-    for (int i : headerIndexing) {
-      rowData.add(tokens[i]);
-    }
-    return rowData;
-  }
-
   public void setRowData(List<String> rowData) throws IOException {
     fm.writeToOutput("\n");
     fm.writeToOutput(String.join(",", rowData));
   }
+  abstract protected void validateHeaders(String[] tokens);
 
-  abstract public void setHeader() throws IOException;
+  abstract protected List<String> validateRowData(String[] tokens);
+
+  abstract protected void setHeader() throws IOException;
 
   public String getFileEncoding() {
-    String fileEncoding = "csv";
-    return fileEncoding;
+    return "csv";
   }
 }
