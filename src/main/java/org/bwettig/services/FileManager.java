@@ -8,67 +8,63 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * @author bradwettig
  */
 public class FileManager {
-  private final Path RESOURCES = Paths.get("resources");
-  private final Path STAGING = Paths.get(RESOURCES.toString(), "staging");
-  private final Path ERROR = Paths.get(RESOURCES.toString(), "error");
-  private final Path SUCCESS = Paths.get(RESOURCES.toString(), "processed");
-  private final Path COMPILED = Paths.get(RESOURCES.toString(), "compiled");
 
-  private FileWriter out;
-  private String fileEncoding;
+  private Map<String, Path> dirPaths;
+  private FileWriter outputFW;
 
-  public void initialize(String fe) throws IOException {
-    this.fileEncoding = fe;
-    validateDirStructure();
-    this.out = initOutputFileWriter();
+  public FileManager(Map<String, Path> dirPaths) {
+    this.dirPaths = dirPaths;
   }
 
-  private FileWriter initOutputFileWriter() throws IOException {
-    Date date = new Date();
+  public void setOutputFW(FileWriter fw) throws IOException {
+    this.outputFW = fw;
+  }
+
+  public String getOutputFilePath(Path path, String fileEncoding, Date date) {
     Timestamp timestamp = new Timestamp(date.getTime());
-    SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss");
-    String outputFileName = sdf1.format(timestamp) + "-output." + fileEncoding;
-    Path outputFilePath = Paths.get(COMPILED.toString(), outputFileName);
-    return new FileWriter(outputFilePath.toString());
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss");
+    String outputFileName = sdf.format(timestamp) + "-output." + fileEncoding;
+    Path outputFilePath = Paths.get(path.toString(), outputFileName);
+    return outputFilePath.toString();
   }
 
-  private void validateDirStructure() {
-    for (Path p : Arrays.asList(STAGING, ERROR, SUCCESS, COMPILED)) {
+  public void validateDirStructure() {
+    for (Path p : dirPaths.values()) {
       File f = new File(p.toString());
       if (!(Files.exists(p) && f.canWrite())) throw new RuntimeException("Directory structure has been corrupted, ensure that there is a \"resources\" directory in the root with subdirectories \"compiled\", \"error\", \"staging\", and \"processed\"");
     }
   }
 
-  public File[] getStagedFiles() {
-    File stagingFiles2 = new File(STAGING.toString());
+  public File[] getStagedFiles(Path p, String fileEncoding) {
+    File stagingFiles2 = new File(p.toString());
     return stagingFiles2.listFiles((d, name) -> name.endsWith("." + fileEncoding));
   }
 
   public void writeToOutput(String output) throws IOException {
-    out.append(output);
+    outputFW.append(output);
   }
 
   public void moveToError(File f) throws IOException {
     Path source = Paths.get(f.getPath());
-    Path target = Paths.get(ERROR.toString(), source.getFileName().toString());
+    Path target = Paths.get(dirPaths.get("Error").toString(), source.getFileName().toString());
     Files.move(source,target);
   }
 
   public void moveToSuccess(File f) throws IOException {
     Path source = Paths.get(f.getPath());
-    Path target = Paths.get(SUCCESS.toString(), source.getFileName().toString());
+    Path target = Paths.get(dirPaths.get("Success").toString(), source.getFileName().toString());
     Files.move(source,target);
   }
 
   public void close() throws IOException {
-    out.flush();
-    out.close();
+    outputFW.flush();
+    outputFW.close();
   }
 }

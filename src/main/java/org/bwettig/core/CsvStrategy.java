@@ -53,12 +53,13 @@ abstract public class CsvStrategy implements Strategy {
         fm.moveToError(csvfile);
         System.err.print(csvfile + ": " + e.getMessage() + "\n");
         e.printStackTrace();
-        break;
+
       }
     }
   }
 
-  private String[] parseCsvLine(String line) {
+
+  protected static String[] parseCsvLine(String line) {
     String splitRegex = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
     return line.split(splitRegex, -1);
   }
@@ -67,7 +68,8 @@ abstract public class CsvStrategy implements Strategy {
     fm.writeToOutput("\n");
     fm.writeToOutput(String.join(",", rowData));
   }
-  abstract protected void validateHeaders(String[] tokens);
+
+  abstract protected List<Integer> validateHeaders(String[] tokens);
 
   abstract protected List<String> validateRowData(String[] tokens, int rowCounter);
 

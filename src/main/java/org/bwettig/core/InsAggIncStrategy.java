@@ -37,13 +37,14 @@ public class InsAggIncStrategy extends CsvStrategy {
     fm.writeToOutput(String.join(",", headers));
   }
 
-  protected void validateHeaders(String[] tokens) {
+  protected List<Integer> validateHeaders(String[] tokens) {
     headerIndexing = new ArrayList<>();
     for (String h : headers) {
       int headerIndex = Arrays.asList(tokens).indexOf(h);
       if (headerIndex < 0) throw new RuntimeException("Missing schema header - " + h);
       headerIndexing.add(headerIndex);
     }
+    return headerIndexing;
   }
 
   protected List<String> validateRowData(String[] tokens, int rowCounter) {
