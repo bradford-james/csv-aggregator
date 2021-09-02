@@ -21,3 +21,20 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+#IDE/Local
+.idea
+/target
+/dependency-reduced-pom.xml
+*.env
+*.env
+
+# Resource folders - placeholder used to populate, so dir can be check into Git
+/resources/staging/*
+!/resources/staging/placeholder.txt
+/resources/compiled/*
+!/resources/compiled/placeholder.txt
+/resources/error/*
+!/resources/error/placeholder.txt
+/resources/processed/*
+!/resources/processed/placeholder.txt
